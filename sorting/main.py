@@ -1,5 +1,5 @@
 import random
-
+import time
 # Importing sorting algorithms
 import sorting_algorithms.bubblesort as bubblesort
 import sorting_algorithms.selectionsort as selectionsort
@@ -57,6 +57,12 @@ else:
         data_structure = {i: random.randint(1, 100) for i in range(search_space_size)}
 
     print(f"\nGenerated Search Space of {search_space_size} elements.")
-
+    sorted_arr = sorted(data_structure)
+    start_time = time.time()
     # Call the sorting function
-    module.sort(data_structure) # this calls the functions in the other file
+    bool = module.sort(data_structure,sorted_arr) # this calls the functions in the other file
+    end_time = time.time()
+    if bool:
+        print(f"\n{selected_algo.capitalize()} took {end_time - start_time:.15f} seconds to sort.") #record time taken
+    else:
+        pass
