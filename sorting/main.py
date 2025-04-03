@@ -12,57 +12,61 @@ import sorting_algorithms.bucketsort as bucketsort
 import sorting_algorithms.timsort as timsort
 import sorting_algorithms.bogosort as bogosort
 
+# Dictionary of sorting algorithms
 sorting_list_dict = {
-    "bubblesort": ("list", bubblesort), #datatypes
-    "selectionsort": ("list", selectionsort),
-    "insertionsort": ("list", insertionsort),
-    "mergesort": ("list", mergesort),
-    "quicksort": ("list", quicksort),
-    "heapsort": ("list", heapsort),
-    "radixsort": ("list", radixsort),
-    "bucketsort": ("dict", bucketsort), #this one requires a dict
-    "timsort": ("list", timsort),
-    "bogosort": ("list", bogosort)
+    "bubblesort": bubblesort,
+    "selectionsort": selectionsort,
+    "insertionsort": insertionsort,
+    "mergesort": mergesort,
+    "quicksort": quicksort,
+    "heapsort": heapsort,
+    "radixsort": radixsort,
+    "bucketsort": bucketsort,
+    "timsort": timsort,
+    "bogosort": bogosort
 }
 
-print("Available Sorting Algorithms:") #prints all the sorting algos
+MAX_ELEMENTS = 10_000_000  # Limit max elements
+
+print("Available Sorting Algorithms:")
 for algo in sorting_list_dict:
     print(f"- {algo.capitalize()}")
 
-selected_algo = input("\nEnter sorting algorithm name: ").replace(" ", "").lower() #input sorting algo to use
+selected_algo = input("\nEnter sorting algorithm name: ").replace(" ", "").lower()
 
 if selected_algo not in sorting_list_dict:
     print("Invalid selection")
 else:
-    data_type, module = sorting_list_dict[selected_algo] #chooses data structure and algo
-
-    data_structure = [] if data_type == "list" else {} #else dict
+    module = sorting_list_dict[selected_algo]  # Get the selected sorting algorithm
 
     print(f"\nYou selected: {selected_algo.capitalize()}")
-    print(f"Initialized data structure: {type(data_structure).__name__}")
 
     while True:
-        try: #no of elements in space
-            search_space_size = int(input("Enter the number of elements for the search space: "))
+        try:
+            search_space_size = int(input(f"Enter the number of elements for the search space (max {MAX_ELEMENTS}): "))
             if search_space_size <= 0:
                 print("Size must be a positive integer.")
+                continue
+            if search_space_size > MAX_ELEMENTS:
+                print(f"Size must not exceed {MAX_ELEMENTS}. Please enter a lower value.")
                 continue
             break
         except ValueError:
             print("Invalid input. Please enter a valid number.")
 
-    if isinstance(data_structure, list): #if list
-        data_structure = [random.randint(1, 100) for _ in range(search_space_size)] #random numbers between 1 to 100
-    else: #if dict
-        data_structure = {i: random.randint(1, 100) for i in range(search_space_size)}
+    data_structure = [random.randint(1, 100) for _ in range(search_space_size)]  # Generate random list
+    sorted_arr = sorted(data_structure)  # Reference sorted array
 
     print(f"\nGenerated Search Space of {search_space_size} elements.")
-    sorted_arr = sorted(data_structure)
+
     start_time = time.time()
-    # Call the sorting function
-    bool = module.sort(data_structure,sorted_arr) # this calls the functions in the other file
+    sorted_bool = module.sort(data_structure, sorted_arr)  # Call sorting function
     end_time = time.time()
-    if bool:
-        print(f"\n{selected_algo.capitalize()} took {end_time - start_time:.15f} seconds to sort.") #record time taken
+
+    if sorted_bool:
+        print(f"\n{selected_algo.capitalize()} took {end_time - start_time:.15f} seconds to sort.")
     else:
-        pass
+        print("Couldn't sort")
+
+
+#radix sort, selection sort, heap sort left
