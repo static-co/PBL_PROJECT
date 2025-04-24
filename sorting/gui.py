@@ -71,12 +71,23 @@ def run_sorting_algorithm(selected_algo, search_space_size, result_message):
     elapsed = time.time() - start
     result_message[0] = f"Sorting completed in {elapsed:.6f} seconds" if result else "Sorting took more than 20 seconds. [Failed]"
 
-def show_loading_screen(timer):
+def show_loading_screen(timer, spinner_frame):
     screen.fill(SOFT_BLUE)
-    show_text("Loading...", SCREEN_WIDTH // 2 - 50, SCREEN_HEIGHT // 2 - 50, DARK_GRAY, font_title)
-    spinner = "|/-\\"
+    loading_text = "Loading..."
+    text_width = font_title.size(loading_text)[0]
+    show_text(loading_text, (SCREEN_WIDTH - text_width) // 2, SCREEN_HEIGHT // 2 - 80, DARK_GRAY, font_title)
+
+    spinner = " "
+    spinner_char = spinner[spinner_frame % len(spinner)]
+    show_text(f"{spinner_char}", SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2, DARK_GRAY, font_title)
+
     show_text(f"Time: {int(timer)}s", SCREEN_WIDTH - 200, 20, DARK_GRAY, font_small)
     pygame.display.update()
+
+
+
+def format_number_with_commas(number_str):
+    return "{:,}".format(int(number_str))
 
 def main():
     running = True
@@ -86,11 +97,12 @@ def main():
     dropdown_open = False
     search_space_size = ""
     input_box_active = False
-    result_message = [""]  
+    result_message = [""]
     sorting_thread = None
     sorting_in_progress = False
     start_time = 0
     elapsed_time = 0
+    spinner_frame = 0
 
     while running:
         screen.fill(LIGHT_GRAY)
@@ -114,7 +126,9 @@ def main():
             input_box = pygame.Rect((SCREEN_WIDTH - 300) // 2, 250, 300, 40)
             pygame.draw.rect(screen, SOFT_BLUE, input_box, border_radius=15)
             pygame.draw.rect(screen, SOFT_AMBER if input_box_active else DARK_GRAY, input_box, 2)
-            show_text(search_space_size or "0", (SCREEN_WIDTH - font_input.size(search_space_size or "0")[0]) // 2, 255, DARK_GRAY, font_input)
+
+            formatted_search_space_size = format_number_with_commas(search_space_size) if search_space_size else "0"
+            show_text(formatted_search_space_size, (SCREEN_WIDTH - font_input.size(formatted_search_space_size)[0]) // 2, 255, DARK_GRAY, font_input)
 
             algo_dropdown_rect = pygame.Rect((SCREEN_WIDTH - 300) // 2, 320, 300, 40)
             pygame.draw.rect(screen, SOFT_BLUE, algo_dropdown_rect, border_radius=15)
@@ -127,7 +141,7 @@ def main():
 
             if dropdown_open:
                 for i, algo in enumerate(algorithm_list):
-                    item_rect = pygame.Rect((SCREEN_WIDTH - 300) // 2, 370 + (i + 1) * 45, 300, 40)  
+                    item_rect = pygame.Rect((SCREEN_WIDTH - 300) // 2, 370 + (i + 1) * 45, 300, 40)
                     pygame.draw.rect(screen, SOFT_AMBER, item_rect, border_radius=10)
                     pygame.draw.rect(screen, DARK_GRAY, item_rect, 2)
                     show_text(algo, (SCREEN_WIDTH - font_input.size(algo)[0]) // 2, 380 + (i + 1) * 45, DARK_GRAY, font_input)
@@ -152,10 +166,10 @@ def main():
                         sorting_thread = None
                         elapsed_time = 0
                     elif sort_button.collidepoint(event.pos):
-                        if selected_algo_index != -1 and search_space_size.isdigit() and not sorting_in_progress:
+                        if selected_algo_index != -1 and search_space_size.replace(",", "").isdigit() and not sorting_in_progress:
                             sorting_in_progress = True
-                            start_time = time.time()  
-                            sorting_thread = threading.Thread(target=run_sorting_algorithm, args=(algorithm_list[selected_algo_index], int(search_space_size), result_message))
+                            start_time = time.time()
+                            sorting_thread = threading.Thread(target=run_sorting_algorithm, args=(algorithm_list[selected_algo_index], int(search_space_size.replace(",", "")), result_message))
                             sorting_thread.start()
                             menu_state = "loading"
 
@@ -171,11 +185,14 @@ def main():
                         search_space_size = search_space_size[:-1]
                     elif event.unicode.isdigit():
                         new_val = search_space_size + event.unicode
-                        search_space_size = str(min(int(new_val), 10000000))
+                        new_val_without_commas = new_val.replace(",", "")
+                        search_space_size = str(min(int(new_val_without_commas), 10000000))
 
         elif menu_state == "loading":
-            elapsed_time = time.time() - start_time  
-            show_loading_screen(elapsed_time)
+            
+            elapsed_time = time.time() - start_time
+            show_loading_screen(elapsed_time, spinner_frame)
+            spinner_frame = (spinner_frame + 1) % 4  # Loop through spinner frames
             if not sorting_thread.is_alive():
                 menu_state = "sorting_result"
 
@@ -191,7 +208,7 @@ def main():
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     if back_button.collidepoint(event.pos):
-                        menu_state = "main_menu"
+                        menu_state = "sorting_menu"
                         selected_algo_index = -1
                         search_space_size = ""
                         input_box_active = False
@@ -200,7 +217,7 @@ def main():
                         sorting_thread = None
                         elapsed_time = 0
 
-        pygame.display.update()
+        pygame.display.flip()
         pygame.time.Clock().tick(FPS)
 
 if __name__ == "__main__":
